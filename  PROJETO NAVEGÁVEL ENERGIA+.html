@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Energia+ Protótipo</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --green-dark: #1a7a2e;
+    --green-main: #2da84a;
+    --green-light: #4dbd6b;
+    --green-pale: #e8f7ec;
+    --green-bg: #f0faf3;
+    --yellow: #f5c518;
+    --orange: #f07d1a;
+    --text-dark: #1a1a1a;
+    --text-mid: #444;
+    --text-light: #777;
+    --white: #ffffff;
+    --border: #e0eee4;
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+
+  body {
+    background: #d4e8d8;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+
+  .phone-shell {
+    width: 390px;
+    height: 844px;
+    background: var(--white);
+    border-radius: 48px;
+    overflow: hidden;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.08);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .status-bar {
+    background: transparent;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    z-index: 10;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--white);
+  }
+  .status-bar.dark { color: var(--text-dark); }
+  .status-icons { display: flex; gap: 5px; align-items: center; }
+
+  .screen {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .screen.active { display: flex; }
+
+  /* ─── SCREEN 1: BOAS-VINDAS ─── */
+  #s1 {
+    background: linear-gradient(160deg, #1e8c38 0%, #2da84a 50%, #4dbd6b 100%);
+  }
+  .s1-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 32px 20px;
+    text-align: center;
+  }
+  .s1-illustration {
+    width: 220px;
+    height: 200px;
+    position: relative;
+    margin-bottom: 32px;
+  }
+  .house-bg {
+    width: 200px;
+    height: 160px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 50%;
+    position: absolute;
+    top: 20px; left: 10px;
+  }
+  .house {
+    position: absolute;
+    bottom: 10px; left: 50%; transform: translateX(-50%);
+    text-align: center;
+  }
+  .house-roof {
+    width: 0; height: 0;
+    border-left: 55px solid transparent;
+    border-right: 55px solid transparent;
+    border-bottom: 45px solid #fff;
+    margin: 0 auto;
+  }
+  .house-body {
+    width: 90px; height: 65px;
+    background: #fff;
+    margin: 0 auto;
+    border-radius: 0 0 6px 6px;
+    position: relative;
+  }
+  .house-door {
+    width: 20px; height: 30px;
+    background: var(--green-main);
+    position: absolute;
+    bottom: 0; left: 50%; transform: translateX(-50%);
+    border-radius: 3px 3px 0 0;
+  }
+  .house-window {
+    width: 16px; height: 14px;
+    background: #b8e8c6;
+    border-radius: 2px;
+    position: absolute;
+    top: 12px;
+  }
+  .house-window.left { left: 10px; }
+  .house-window.right { right: 10px; }
+  .solar-panel {
+    width: 30px; height: 12px;
+    background: #1a5c9e;
+    border-radius: 2px;
+    position: absolute;
+    top: -2px;
+    border: 1px solid #2b7ad4;
+  }
+  .solar-panel.s1p { left: 5px; transform: rotate(-15deg); }
+  .solar-panel.s2p { left: 28px; transform: rotate(-15deg); }
+  .lightning {
+    position: absolute;
+    top: 0; right: 30px;
+    font-size: 48px;
+    filter: drop-shadow(0 0 12px rgba(255,200,0,0.6));
+  }
+  .tree {
+    position: absolute;
+    bottom: 8px;
+    font-size: 36px;
+  }
+  .tree.left { left: 0; }
+  .tree.right { right: 10px; }
+  .cloud { position: absolute; font-size: 28px; opacity: 0.7; }
+  .cloud.c1 { top: 10px; left: 10px; }
+  .cloud.c2 { top: 5px; right: 20px; }
+  .s1-title { font-size: 36px; font-weight: 800; color: var(--white); letter-spacing: -1px; margin-bottom: 12px; }
+  .s1-title span { color: var(--yellow); }
+  .s1-subtitle { font-size: 15px; color: rgba(255,255,255,0.85); line-height: 1.5; }
+  .s1-actions { padding: 24px 32px 48px; display: flex; flex-direction: column; gap: 12px; }
+  .btn-primary {
+    background: var(--white);
+    color: var(--green-dark);
+    border: none;
+    border-radius: 50px;
+    padding: 18px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,0,0,0.2); }
+  .btn-ghost {
+    background: transparent;
+    color: var(--white);
+    border: 2px solid rgba(255,255,255,0.5);
+    border-radius: 50px;
+    padding: 16px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-green {
+    background: var(--green-main);
+    color: var(--white);
+    border: none;
+    border-radius: 50px;
+    padding: 17px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.15s;
+  }
+  .btn-green:hover { transform: translateY(-1px); }
+
+  /* ─── SCREEN 2: LOGIN ─── */
+  #s2 { background: var(--white); }
+  .login-header {
+    padding: 56px 28px 24px;
+  }
+  .back-btn {
+    width: 36px; height: 36px;
+    background: var(--green-pale);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    border: none;
+    font-size: 18px;
+    margin-bottom: 24px;
+  }
+  .login-title { font-size: 28px; font-weight: 800; color: var(--text-dark); margin-bottom: 4px; }
+  .login-sub { font-size: 14px; color: var(--text-light); }
+  .login-body { flex: 1; padding: 0 28px; }
+  .field-label { font-size: 13px; font-weight: 600; color: var(--text-mid); margin-bottom: 6px; margin-top: 18px; }
+  .field-input {
+    width: 100%;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    font-size: 15px;
+    color: var(--text-dark);
+    outline: none;
+    background: #fafafa;
+  }
+  .field-input:focus { border-color: var(--green-main); background: var(--white); }
+  .password-wrap { position: relative; }
+  .eye-btn { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); cursor: pointer; color: var(--text-light); background: none; border: none; font-size: 16px; }
+  .forgot { text-align: right; margin-top: 8px; font-size: 13px; color: var(--green-main); font-weight: 600; cursor: pointer; }
+  .login-actions { padding: 24px 28px 36px; display: flex; flex-direction: column; gap: 12px; }
+  .divider { display: flex; align-items: center; gap: 12px; color: var(--text-light); font-size: 13px; }
+  .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .btn-google {
+    border: 1.5px solid var(--border);
+    background: var(--white);
+    border-radius: 50px;
+    padding: 14px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    color: var(--text-dark);
+  }
+  .g-icon { font-size: 18px; }
+  .signup-link { text-align: center; font-size: 13px; color: var(--text-light); }
+  .signup-link span { color: var(--green-main); font-weight: 700; cursor: pointer; }
+
+  /* ─── SCREEN 3: ONBOARDING ─── */
+  #s3 { background: var(--white); }
+  .onboard-body {
+    flex: 1;
+    display: flex; flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 32px 0;
+    text-align: center;
+  }
+  .onboard-illo {
+    width: 200px; height: 200px;
+    background: var(--green-pale);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 90px;
+    margin-bottom: 32px;
+  }
+  .onboard-title { font-size: 24px; font-weight: 800; color: var(--text-dark); line-height: 1.2; margin-bottom: 12px; }
+  .onboard-desc { font-size: 15px; color: var(--text-light); line-height: 1.6; }
+  .onboard-footer { padding: 32px; display: flex; align-items: center; justify-content: space-between; }
+  .dots { display: flex; gap: 6px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); }
+  .dot.active { background: var(--green-main); width: 24px; border-radius: 4px; }
+  .next-btn {
+    width: 52px; height: 52px;
+    background: var(--green-main);
+    border-radius: 50%;
+    border: none;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    font-size: 22px;
+    color: var(--white);
+    box-shadow: 0 4px 16px rgba(45,168,74,0.4);
+  }
+
+  /* ─── BOTTOM NAV ─── */
+  .bottom-nav {
+    height: 70px;
+    background: var(--white);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 8px 8px;
+    flex-shrink: 0;
+  }
+  .nav-item {
+    flex: 1;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 3px;
+    cursor: pointer;
+    padding: 6px 0;
+    border: none; background: none;
+  }
+  .nav-icon { font-size: 20px; color: var(--text-light); }
+  .nav-label { font-size: 10px; color: var(--text-light); font-weight: 500; }
+  .nav-item.active .nav-icon { color: var(--green-main); }
+  .nav-item.active .nav-label { color: var(--green-main); font-weight: 700; }
+
+  /* ─── SCREEN 4: DASHBOARD ─── */
+  #s4 { background: var(--green-bg); }
+  .dash-header {
+    background: linear-gradient(135deg, #1a7a2e, #2da84a);
+    padding: 52px 24px 28px;
+    color: white;
+  }
+  .dash-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .dash-greeting { font-size: 20px; font-weight: 700; }
+  .dash-sub { font-size: 13px; opacity: 0.8; }
+  .bell-btn { width: 38px; height: 38px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; border: none; }
+  .dash-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .consumption-label { font-size: 12px; color: var(--text-light); margin-bottom: 6px; }
+  .consumption-value { font-size: 28px; font-weight: 800; color: var(--text-dark); }
+  .consumption-delta { font-size: 12px; color: var(--green-main); font-weight: 600; margin-top: 2px; }
+  .dash-body { flex: 1; overflow-y: auto; padding: 16px; }
+  .stats-row { display: flex; gap: 10px; margin-bottom: 12px; }
+  .stat-card {
+    flex: 1;
+    background: var(--white);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+  }
+  .stat-label { font-size: 11px; color: var(--text-light); margin-bottom: 4px; }
+  .stat-value { font-size: 18px; font-weight: 800; color: var(--text-dark); }
+  .stat-sub { font-size: 11px; color: var(--text-light); margin-top: 2px; }
+  .progress-bar-wrap { background: var(--border); height: 6px; border-radius: 3px; margin-top: 8px; }
+  .progress-bar-fill { background: var(--green-main); height: 6px; border-radius: 3px; }
+  .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .section-title { font-size: 15px; font-weight: 700; color: var(--text-dark); }
+  .see-all { font-size: 12px; color: var(--green-main); font-weight: 600; cursor: pointer; }
+  .shortcuts { display: flex; gap: 8px; }
+  .shortcut {
+    flex: 1;
+    background: var(--white);
+    border-radius: var(--radius-sm);
+    padding: 12px 6px;
+    display: flex; flex-direction: column;
+    align-items: center; gap: 6px;
+    cursor: pointer;
+    border: none;
+  }
+  .shortcut-icon { font-size: 22px; }
+  .shortcut-label { font-size: 11px; color: var(--text-mid); font-weight: 600; text-align: center; }
+
+  /* ─── SCREEN 5: RELATÓRIOS ─── */
+  #s5 { background: var(--green-bg); }
+  .report-header { background: var(--white); padding: 52px 24px 20px; border-bottom: 1px solid var(--border); }
+  .report-title { font-size: 22px; font-weight: 800; color: var(--text-dark); margin-bottom: 16px; }
+  .month-nav { display: flex; align-items: center; justify-content: space-between; }
+  .month-nav-btn { width: 30px; height: 30px; border-radius: 50%; background: var(--green-pale); border: none; cursor: pointer; font-size: 16px; }
+  .month-label { font-size: 14px; font-weight: 700; color: var(--text-dark); }
+  .report-body { flex: 1; overflow-y: auto; padding: 16px; }
+  .chart-card { background: var(--white); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; }
+  .chart-title { font-size: 13px; font-weight: 700; color: var(--text-mid); margin-bottom: 12px; }
+  .bar-chart { display: flex; align-items: flex-end; gap: 6px; height: 80px; }
+  .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .bar { width: 100%; background: var(--green-light); border-radius: 4px 4px 0 0; }
+  .bar.highlight { background: var(--green-dark); }
+  .bar-day { font-size: 9px; color: var(--text-light); }
+  .impact-row { display: flex; gap: 10px; margin-bottom: 12px; }
+  .impact-card { flex: 1; background: var(--white); border-radius: var(--radius-sm); padding: 14px; }
+  .impact-label { font-size: 11px; color: var(--text-light); margin-bottom: 4px; }
+  .impact-value { font-size: 20px; font-weight: 800; }
+  .impact-value.green { color: var(--green-main); }
+  .impact-sub { font-size: 11px; color: var(--text-light); }
+  .eco-card { background: var(--white); border-radius: var(--radius); padding: 16px; }
+  .eco-row { display: flex; align-items: center; gap: 10px; }
+  .eco-icon { font-size: 24px; }
+  .eco-text { font-size: 14px; color: var(--text-dark); font-weight: 600; }
+  .eco-sub { font-size: 12px; color: var(--text-light); }
+
+  /* ─── SCREEN 6: DESAFIOS ─── */
+  #s6 { background: var(--green-bg); }
+  .challenge-header { background: var(--white); padding: 52px 24px 16px; border-bottom: 1px solid var(--border); }
+  .challenge-title { font-size: 22px; font-weight: 800; color: var(--text-dark); }
+  .challenge-sub { font-size: 13px; color: var(--text-light); margin-top: 4px; }
+  .challenge-body { flex: 1; overflow-y: auto; padding: 16px; }
+  .challenge-card {
+    background: var(--white);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .challenge-ico { font-size: 28px; width: 44px; text-align: center; }
+  .challenge-info { flex: 1; }
+  .challenge-name { font-size: 14px; font-weight: 700; color: var(--text-dark); }
+  .challenge-xp { font-size: 13px; color: var(--green-main); font-weight: 600; margin-top: 2px; }
+  .challenge-btn {
+    background: var(--green-main);
+    color: var(--white);
+    border: none;
+    border-radius: 20px;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .progress-section { background: var(--white); border-radius: var(--radius-sm); padding: 14px; margin-top: 4px; }
+  .prog-label { font-size: 13px; color: var(--text-mid); margin-bottom: 8px; font-weight: 600; }
+  .prog-text { font-size: 12px; color: var(--text-light); margin-top: 6px; }
+
+  /* ─── SCREEN 7: CONQUISTAS ─── */
+  #s7 { background: var(--green-bg); }
+  .conquest-header { background: var(--white); padding: 52px 24px 16px; border-bottom: 1px solid var(--border); }
+  .conquest-title { font-size: 22px; font-weight: 800; color: var(--text-dark); }
+  .conquest-body { flex: 1; overflow-y: auto; padding: 16px; }
+  .conquest-card {
+    background: var(--white);
+    border-radius: var(--radius-sm);
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 10px;
+  }
+  .medal { font-size: 34px; }
+  .conquest-info { flex: 1; }
+  .conquest-name { font-size: 15px; font-weight: 700; color: var(--text-dark); }
+  .conquest-desc { font-size: 13px; color: var(--text-light); margin-top: 2px; }
+  .conquest-check { font-size: 20px; }
+  .conquest-locked { opacity: 0.4; }
+  .lock-icon { font-size: 20px; color: var(--text-light); }
+
+  /* ─── SCREEN 8: DICAS ─── */
+  #s8 { background: var(--green-bg); }
+  .tips-header { background: var(--white); padding: 52px 24px 16px; border-bottom: 1px solid var(--border); }
+  .tips-title { font-size: 22px; font-weight: 800; color: var(--text-dark); }
+  .tips-body { flex: 1; overflow-y: auto; padding: 16px; }
+  .tip-feature {
+    background: linear-gradient(135deg, #1a7a2e, #2da84a);
+    border-radius: var(--radius);
+    padding: 24px 20px;
+    color: var(--white);
+    margin-bottom: 12px;
+    text-align: center;
+  }
+  .tip-day { font-size: 13px; font-weight: 700; opacity: 0.8; margin-bottom: 8px; }
+  .tip-icon-big { font-size: 56px; margin-bottom: 12px; }
+  .tip-text { font-size: 16px; font-weight: 700; line-height: 1.3; margin-bottom: 8px; }
+  .tip-saving { font-size: 22px; font-weight: 800; }
+  .tip-saving-label { font-size: 13px; opacity: 0.8; }
+  .tip-dots { display: flex; justify-content: center; gap: 6px; margin-top: 16px; }
+  .tip-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.4); }
+  .tip-dot.active { background: white; width: 18px; border-radius: 3px; }
+  .save-tip-btn {
+    width: 100%;
+    background: rgba(255,255,255,0.2);
+    border: 2px solid rgba(255,255,255,0.5);
+    color: var(--white);
+    border-radius: 50px;
+    padding: 14px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 16px;
+  }
+
+  /* ─── SCREEN 9: METAS ─── */
+  #s9 { background: var(--green-bg); }
+  .meta-header { background: var(--white); padding: 52px 24px 16px; border-bottom: 1px solid var(--border); }
+  .meta-title { font-size: 22px; font-weight: 800; color: var(--text-dark); }
+  .meta-body { flex: 1; overflow-y: auto; padding: 16px; }
+  .ring-card { background: var(--white); border-radius: var(--radius); padding: 24px; margin-bottom: 12px; display: flex; flex-direction: column; align-items: center; }
+  .ring-wrap { position: relative; width: 140px; height: 140px; margin-bottom: 16px; }
+  .ring-svg { transform: rotate(-90deg); }
+  .ring-bg { fill: none; stroke: var(--border); stroke-width: 12; }
+  .ring-fill { fill: none; stroke: var(--green-main); stroke-width: 12; stroke-linecap: round; stroke-dasharray: 339.3; stroke-dashoffset: 101.8; }
+  .ring-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
+  .ring-pct { font-size: 28px; font-weight: 800; color: var(--text-dark); }
+  .ring-label { font-size: 11px; color: var(--text-light); }
+  .meta-saved { font-size: 15px; color: var(--green-main); font-weight: 700; }
+  .meta-remaining { font-size: 13px; color: var(--text-light); margin-top: 4px; }
+  .edit-meta-btn { width: 100%; margin-top: 12px; }
+
+  /* ─── SCREEN 10: RECOMPENSAS ─── */
+  #s10 { background: var(--green-bg); }
+  .reward-header { background: var(--white); padding: 52px 24px 16px; border-bottom: 1px solid var(--border); }
+  .reward-top { display: flex; justify-content: space-between; align-items: center; }
+  .reward-title { font-size: 22px; font-weight: 800; color: var(--text-dark); }
+  .xp-badge { background: var(--yellow); border-radius: 20px; padding: 6px 14px; font-size: 14px; font-weight: 800; color: #7a5000; display: flex; align-items: center; gap: 4px; }
+  .reward-tabs { display: flex; gap: 0; margin-top: 14px; background: var(--green-bg); border-radius: 10px; padding: 3px; }
+  .rtab { flex: 1; padding: 8px; text-align: center; font-size: 13px; font-weight: 600; color: var(--text-light); border-radius: 8px; cursor: pointer; border: none; background: transparent; }
+  .rtab.active { background: var(--white); color: var(--green-dark); box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+  .reward-body { flex: 1; overflow-y: auto; padding: 16px; }
+  .reward-item {
+    background: var(--white);
+    border-radius: var(--radius-sm);
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 10px;
+    cursor: pointer;
+  }
+  .reward-ico { font-size: 36px; }
+  .reward-info { flex: 1; }
+  .reward-xp { font-size: 12px; color: var(--green-main); font-weight: 700; margin-bottom: 2px; }
+  .reward-name { font-size: 15px; font-weight: 700; color: var(--text-dark); }
+  .reward-desc { font-size: 12px; color: var(--text-light); margin-top: 2px; }
+  .reward-arrow { color: var(--text-light); font-size: 18px; }
+
+  /* ─── SCREEN 11: PERFIL ─── */
+  #s11 { background: var(--green-bg); }
+  .profile-header {
+    background: linear-gradient(135deg, #1a7a2e, #2da84a);
+    padding: 52px 24px 28px;
+    color: var(--white);
+    position: relative;
+  }
+  .settings-btn {
+    position: absolute; top: 52px; right: 24px;
+    width: 36px; height: 36px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 50%;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+  }
+  .avatar-wrap { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
+  .avatar { width: 64px; height: 64px; border-radius: 50%; background: rgba(255,255,255,0.3); border: 3px solid white; display: flex; align-items: center; justify-content: center; font-size: 32px; }
+  .profile-name { font-size: 22px; font-weight: 800; }
+  .profile-level { font-size: 13px; opacity: 0.8; }
+  .eco-badge { display: inline-block; background: rgba(255,255,255,0.25); border-radius: 20px; padding: 4px 12px; font-size: 13px; font-weight: 700; margin-top: 4px; }
+  .profile-stats { display: flex; gap: 0; background: rgba(255,255,255,0.15); border-radius: var(--radius-sm); }
+  .pstat { flex: 1; text-align: center; padding: 14px 8px; }
+  .pstat + .pstat { border-left: 1px solid rgba(255,255,255,0.2); }
+  .pstat-value { font-size: 17px; font-weight: 800; }
+  .pstat-label { font-size: 11px; opacity: 0.8; margin-top: 2px; }
+  .profile-body { flex: 1; overflow-y: auto; padding: 16px; }
+  .conquests-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+  .conquest-badge { width: 48px; height: 48px; border-radius: 50%; background: var(--white); display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+  .profile-card { background: var(--white); border-radius: var(--radius-sm); padding: 14px; margin-bottom: 10px; }
+  .profile-section-title { font-size: 14px; font-weight: 700; color: var(--text-dark); margin-bottom: 10px; }
+  .logout-btn {
+    width: 100%;
+    background: var(--white);
+    border: 1.5px solid #ff4444;
+    color: #ff4444;
+    border-radius: 50px;
+    padding: 14px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 4px;
+  }
+
+  .scrollable { overflow-y: auto; }
+  .scrollable::-webkit-scrollbar { display: none; }
+</style>
+</head>
+<body>
+
+<div class="phone-shell">
+
+  <!-- ─── SCREEN 1: BOAS-VINDAS ─── -->
+  <div class="screen active" id="s1">
+    <div class="status-bar">
+      <span>9:41</span>
+      <div class="status-icons">
+        <span>●●●</span><span>WiFi</span><span>🔋</span>
+      </div>
+    </div>
+    <div class="s1-content">
+      <div class="s1-illustration">
+        <div class="house-bg"></div>
+        <span class="cloud c1">☁️</span>
+        <span class="cloud c2">☁️</span>
+        <span class="lightning">⚡</span>
+        <div class="house">
+          <div class="house-roof"></div>
+          <div class="house-body">
+            <div class="solar-panel s1p"></div>
+            <div class="solar-panel s2p"></div>
+            <div class="house-window left"></div>
+            <div class="house-window right"></div>
+            <div class="house-door"></div>
+          </div>
+        </div>
+        <span class="tree left">🌳</span>
+        <span class="tree right">🌿</span>
+      </div>
+      <div class="s1-title">Energia<span>+</span></div>
+      <div class="s1-subtitle">Economize energia, ganhe recompensas<br>e ajude o planeta.</div>
+    </div>
+    <div class="s1-actions">
+      <button class="btn-primary" onclick="go('s2')">Começar</button>
+      <button class="btn-ghost" onclick="go('s4')">Já tenho conta</button>
+    </div>
+  </div>
+
+  <!-- ─── SCREEN 2: LOGIN ─── -->
+  <div class="screen" id="s2">
+    <div class="status-bar dark"></div>
+    <div class="login-header">
+      <button class="back-btn" onclick="go('s1')">←</button>
+      <div class="login-title">Entrar</div>
+      <div class="login-sub">Bem-vindo de volta!</div>
+    </div>
+    <div class="login-body">
+      <div class="field-label">E-mail</div>
+      <input class="field-input" type="email" placeholder="seu@email.com">
+      <div class="field-label">Senha</div>
+      <div class="password-wrap">
+        <input class="field-input" type="password" value="••••••••" style="width:100%">
+        <button class="eye-btn">👁</button>
+      </div>
+      <div class="forgot">Esqueceu a senha?</div>
+    </div>
+    <div class="login-actions">
+      <button class="btn-green" onclick="go('s3')">Entrar</button>
+      <div class="divider">ou</div>
+      <button class="btn-google"><span class="g-icon">🔵</span> Entrar com Google</button>
+      <div class="signup-link">Não tem uma conta? <span onclick="go('s3')">Criar conta</span></div>
+    </div>
+  </div>
+
+  <!-- ─── SCREEN 3: ONBOARDING ─── -->
+  <div class="screen" id="s3">
+    <div class="status-bar dark"></div>
+    <div class="onboard-body">
+      <div class="onboard-illo">📊</div>
+      <div class="onboard-title">Monitore seu consumo<br>em tempo real</div>
+      <div class="onboard-desc">Acompanhe seus gastos e descubra oportunidades de economia para sua casa.</div>
+    </div>
+    <div class="onboard-footer">
+      <div class="dots">
+        <div class="dot active"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+      <button class="next-btn" onclick="go('s4')">→</button>
+    </div>
+  </div>
+
+  <!-- ─── SCREEN 4: DASHBOARD ─── -->
+  <div class="screen" id="s4">
+    <div class="dash-header">
+      <div class="status-bar" style="position:relative;top:auto;left:auto;right:auto;padding:0;margin-bottom:12px;">
+        <span>9:41</span>
+        <div class="status-icons"><span>●●●</span><span>🔋</span></div>
+      </div>
+      <div class="dash-top">
+        <div>
+          <div class="dash-greeting">Olá, Alanys! 👋</div>
+          <div class="dash-sub">Boa tarde!</div>
+        </div>
+        <button class="bell-btn">🔔</button>
+      </div>
+      <div class="dash-card">
+        <div class="consumption-label">Consumo mensal</div>
+        <div class="consumption-value">R$ 178,00</div>
+        <div class="consumption-delta">▲ 12% comparado ao mês passado</div>
+      </div>
+    </div>
+    <div class="dash-body scrollable">
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-label">Sua meta</div>
+          <div class="stat-value">15%</div>
+          <div class="stat-sub">de economia</div>
+          <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:80%"></div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Pontos</div>
+          <div class="stat-value">450 XP</div>
+          <div class="stat-sub">Próximo nível: 500 XP</div>
+          <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:90%"></div></div>
+        </div>
+      </div>
+      <div class="dash-card">
+        <div class="section-header">
+          <div class="section-title">Atalhos rápidos</div>
+          <span class="see-all">Ver todos</span>
+        </div>
+        <div class="shortcuts">
+          <button class="shortcut" onclick="go('s6')"><span class="shortcut-icon">🏆</span><span class="shortcut-label">Desafios</span></button>
+          <button class="shortcut" onclick="go('s8')"><span class="shortcut-icon">💡</span><span class="shortcut-label">Dicas</span></button>
+          <button class="shortcut" onclick="go('s5')"><span class="shortcut-icon">📊</span><span class="shortcut-label">Relatórios</span></button>
+          <button class="shortcut" onclick="go('s10')"><span class="shortcut-icon">🎁</span><span class="shortcut-label">Recompensas</span></button>
+        </div>
+      </div>
+    </div>
+    <div class="bottom-nav">
+      <button class="nav-item active" onclick="go('s4')"><span class="nav-icon">🏠</span><span class="nav-label">Início</span></button>
+      <button class="nav-item" onclick="go('s5')"><span class="nav-icon">📊</span><span class="nav-label">Relatórios</span></button>
+      <button class="nav-item" onclick="go('s9')"><span class="nav-icon">🎯</span><span class="nav-label">Metas</span></button>
+      <button class="nav-item" onclick="go('s10')"><span class="nav-icon">🎁</span><span class="nav-label">Recompensas</span></button>
+      <button class="nav-item" onclick="go('s11')"><span class="nav-icon">👤</span><span class="nav-label">Perfil</span></button>
+    </div>
+  </div>
+
+  <!-- ─── SCREEN 5: RELATÓRIOS ─── -->
+  <div class="screen" id="s5">
+    <div class="report-header">
+      <div class="report-title">Relatórios</div>
+      <div class="month-nav">
+        <button class="month-nav-btn">‹</button>
+        <span class="month-label">Junho de 2024 ▾</span>
+        <button class="month-nav-btn">›</button>
+      </div>
+    </div>
+    <div class="report-body scrollable">
+      <div class="chart-card">
+        <div class="chart-title">Consumo semanal (kWh)</div>
+        <div class="bar-chart">
+          <div class="bar-col"><div class="bar" style="height:40px"></div><span class="bar-day">Seg</span></div>
+          <div class="bar-col"><div class="bar" style="height:55px"></div><span class="bar-day">Ter</span></div>
+          <div class="bar-col"><div class="bar" style="height:38px"></div><span class="bar-day">Qua</span></div>
+          <div class="bar-col"><div class="bar" style="height:62px"></div><span class="bar-day">Qui</span></div>
+          <div class="bar-col"><div class="bar highlight" style="height:75px"></div><span class="bar-day">Sex</span></div>
+          <div class="bar-col"><div class="bar" style="height:50px"></div><span class="bar-day">Sáb</span></div>
+          <div class="bar-col"><div class="bar" style="height:30px"></div><span class="bar-day">Dom</span></div>
+        </div>
+      </div>
+      <div class="impact-row">
+        <div class="impact-card">
+          <div class="impact-label">Economia obtida</div>
+          <div class="impact-value green">R$ 42,00</div>
+          <div class="impact-sub">este mês</div>
+        </div>
+        <div class="impact-card">
+          <div class="impact-label">Energia poupada</div>
+          <div class="impact-value green">35 kWh</div>
+          <div class="impact-sub">este mês</div>
+        </div>
+      </div>
+      <div class="eco-card">
+        <div class="eco-row">
+          <span class="eco-icon">🌿</span>
+          <div>
+            <div class="eco-text">12kg de CO₂ evitados</div>
+            <div class="eco-sub">este mês</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="bottom-nav">
+      <button class="nav-item" onclick="go('s4')"><span class="nav-icon">🏠</span><span class="nav-label">Início</span></button>
+      <button class="nav-item active" onclick="go('s5')"><span class="nav-icon">📊</span><span class="nav-label">Relatórios</span></button>
+      <button class="nav-item" onclick="go('s9')"><span class="nav-icon">🎯</span><span class="nav-label">Metas</span></button>
+      <button class="nav-item" onclick="go('s10')"><span class="nav-icon">🎁</span><span class="nav-label">Recompensas</span></button>
+      <button class="nav-item" onclick="go('s11')"><span class="nav-icon">👤</span><span class="nav-label">Perfil</span></button>
+    </div>
+  </div>
+
+  <!-- ─── SCREEN 6: DESAFIOS ─── -->
+  <div class="screen" id="s6">
+    <div class="challenge-header">
+      <div class="challenge-title">Desafios da Semana</div>
+      <div class="challenge-sub">Novos desafios em 5 dias</div>
+    </div>
+    <div class="challenge-body scrollable">
+      <div class="challenge-card">
+        <span class="challenge-ico">💡</span>
+        <div class="challenge-info">
+          <div class="challenge-name">Apague luzes não utilizadas</div>
+          <div class="challenge-xp">+50 XP</div>
+        </div>
+        <button class="challenge-btn">Concluir</button>
+      </div>
+      <div class="challenge-card">
+        <span class="challenge-ico">🚿</span>
+        <div class="challenge-info">
+          <div class="challenge-name">Banho de até 10 minutos</div>
+          <div class="challenge-xp">+75 XP</div>
+        </div>
+        <button class="challenge-btn">Concluir</button>
+      </div>
+      <div class="challenge-card">
+        <span class="challenge-ico">🔌</span>
+        <div class="challenge-info">
+          <div class="challenge-name">Desligar aparelhos em stand-by</div>
+          <div class="challenge-xp">+100 XP</div>
+        </div>
+        <button class="challenge-btn">Concluir</button>
+      </div>
+      <div class="progress-section">
+        <div class="prog-label">Seu progresso</div>
+        <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:66%"></div></div>
+        <div class="prog-text">2/3 — Continue assim!</div>
+      </div>
+    </div>
+    <div class="bottom-nav">
+      <button class="nav-item" onclick="go('s4')"><span class="nav-icon">🏠</span><span class="nav-label">Início</span></button>
+      <button class="nav-item" onclick="go('s5')"><span class="nav-icon">📊</span><span class="nav-label">Relatórios</span></button>
+      <button class="nav-item" onclick="go('s9')"><span class="nav-icon">🎯</span><span class="nav-label">Metas</span></button>
+      <button class="nav-item active" onclick="go('s10')"><span class="nav-icon">🎁</span><span class="nav-label">Recompensas</span></button>
+      <button class="nav-item" onclick="go('s11')"><span class="nav-icon">👤</span><span class="nav-label">Perfil</span></button>
+    </div>
+  </div>
+
+  <!-- ─── SCREEN 7: CONQUISTAS ─── -->
+  <div class="screen" id="s7">
+    <div class="conquest-header">
+      <div class="conquest-title">Conquistas</div>
+    </div>
+    <div class="conquest-body scrollable">
+      <div class="conquest-card">
+        <span class="medal">🥉</span>
+        <div class="conquest-info">
+          <div class="conquest-name">Iniciante</div>
+          <div class="conquest-desc">Complete 3 desafios</div>
+        </div>
+        <span class="conquest-check">✅</span>
+      </div>
+      <div class="conquest-card">
+        <span class="medal">🥈</span>
+        <div class="conquest-info">
+          <div class="conquest-name">Economizador</div>
+          <div class="conquest-desc">Economize 10%</div>
+        </div>
+        <span class="conquest-check">✅</span>
+      </div>
+      <div class="conquest-card conquest-locked">
+        <span class="medal">🥇</span>
+        <div class="conquest-info">
+          <div class="conquest-name">Mestre da Energia</div>
+          <div class="conquest-desc">Economize 20%</div>
+        </div>
+        <span class="lock-icon">🔒</span>
+      </div>
+      <div class="conquest-card conquest-locked">
+        <span class="medal">💎</span>
+        <div class="conquest-info">
+          <div class="conquest-name">Energia Suprema</div>
+          <div class="conquest-desc">Economize 30%</div>
+        </div>
+        <span class="lock-icon">🔒</span>
+      </div>
+    </div>
+    <div class="bottom-nav">
+      <button class="nav-item" onclick="go('s4')"><span class="nav-icon">🏠</span><span class="nav-label">Início</span></button>
+      <button class="nav-item" onclick="go('s5')"><span class="nav-icon">📊</span><span class="nav-label">Relatórios</span></button>
+      <button class="nav-item" onclick="go('s9')"><span class="nav-icon">🎯</span><span class="nav-label">Metas</span></button>
+      <button class="nav-item active" onclick="go('s10')"><span class="nav-icon">🎁</span><span class="nav-label">Recompensas</span></button>
+      <button class="nav-item" onclick="go('s11')"><span class="nav-icon">👤</span><span class="nav-label">Perfil</span></button>
+    </div>
+  </div>
+
+  <!-- ─── SCREEN 8: DICAS ─── -->
+  <div class="screen" id="s8">
+    <div class="tips-header">
+      <div class="tips-title">Dica do Dia</div>
+    </div>
+    <div class="tips-body scrollable">
+      <div class="tip-feature">
+        <div class="tip-day">💡 Dica do dia</div>
+        <div class="tip-icon-big">🪔</div>
+        <div class="tip-text">Troque lâmpadas incandescentes por LED.</div>
+        <div style="margin-top:12px">
+          <div class="tip-saving-label">Economia de até</div>
+          <div class="tip-saving">80%</div>
+          <div class="tip-saving-label">de energia</div>
+        </div>
+        <div class="tip-dots">
+          <div class="tip-dot active"></div>
+          <div class="tip-dot"></div>
+          <div class="tip-dot"></div>
+          <div class="tip-dot"></div>
+        </div>
+        <button class="save-tip-btn">🔖 Salvar dica</button>
+      </div>
+    </div>
+    <div class="bottom-nav">
+      <button class="nav-item" onclick="go('s4')"><span class="nav-icon">🏠</span><span class="nav-label">Início</span></button>
+      <button class="nav-item" onclick="go('s5')"><span class="nav-icon">📊</span><span class="nav-label">Relatórios</span></button>
+      <button class="nav-item" onclick="go('s9')"><span class="nav-icon">🎯</span><span class="nav-label">Metas</span></button>
+      <button class="nav-item active" onclick="go('s10')"><span class="nav-icon">🎁</span><span class="nav-label">Recompensas</span></button>
+      <button class="nav-item" onclick="go('s11')"><span class="nav-icon">👤</span><span class="nav-label">Perfil</span></button>
+    </div>
+  </div>
+
+  <!-- ─── SCREEN 9: METAS ─── -->
+  <div class="screen" id="s9">
+    <div class="meta-header">
+      <div class="meta-title">Minha Meta</div>
+    </div>
+    <div class="meta-body scrollable">
+      <div class="ring-card">
+        <div class="ring-wrap">
+          <svg class="ring-svg" width="140" height="140" viewBox="0 0 140 140">
+            <circle class="ring-bg" cx="70" cy="70" r="54"/>
+            <circle class="ring-fill" cx="70" cy="70" r="54"/>
+          </svg>
+          <div class="ring-text">
+            <div class="ring-pct">15%</div>
+            <div class="ring-label">de economia</div>
+          </div>
+        </div>
+        <div class="meta-saved">✅ Você já economizou 12%</div>
+        <div class="meta-remaining">Faltam 3% para sua meta!</div>
+        <button class="btn-green edit-meta-btn">Editar Meta</button>
+      </div>
+      <div class="dash-card">
+        <div class="section-title" style="margin-bottom:10px">Histórico de Metas</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;justify-content:space-between;font-size:13px">
+            <span style="color:var(--text-mid)">Maio 2024</span>
+            <span style="color:var(--green-main);font-weight:700">10% ✅</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:13px">
+            <span style="color:var(--text-mid)">Abril 2024</span>
+            <span style="color:var(--green-main);font-weight:700">8% ✅</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:13px">
+            <span style="color:var(--text-mid)">Março 2024</span>
+            <span style="color:var(--orange);font-weight:700">5% ⚡</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="bottom-nav">
+      <button class="nav-item" onclick="go('s4')"><span class="nav-icon">🏠</span><span class="nav-label">Início</span></button>
+      <button class="nav-item" onclick="go('s5')"><span class="nav-icon">📊</span><span class="nav-label">Relatórios</span></button>
+      <button class="nav-item active" onclick="go('s9')"><span class="nav-icon">🎯</span><span class="nav-label">Metas</span></button>
+      <button class="nav-item" onclick="go('s10')"><span class="nav-icon">🎁</span><span class="nav-label">Recompensas</span></button>
+      <button class="nav-item" onclick="go('s11')"><span class="nav-icon">👤</span><span class="nav-label">Perfil</span></button>
+    </div>
+  </div>
+
+  <!-- ─── SCREEN 10: RECOMPENSAS ─── -->
+  <div class="screen" id="s10">
+    <div class="reward-header">
+      <div class="reward-top">
+        <div class="reward-title">Loja de Recompensas</div>
+        <div class="xp-badge">⭐ 450</div>
+      </div>
+      <div class="reward-tabs">
+        <button class="rtab active">Todos</button>
+        <button class="rtab">Cupons</button>
+        <button class="rtab">Produtos</button>
+        <button class="rtab">Experiências</button>
+      </div>
+    </div>
+    <div class="reward-body scrollable">
+      <div class="reward-item" onclick="go('s6')">
+        <span class="reward-ico">🎟️</span>
+        <div class="reward-info">
+          <div class="reward-xp">500 XP</div>
+          <div class="reward-name">Cupom Parceiro</div>
+          <div class="reward-desc">Descontos exclusivos em lojas parceiras.</div>
+        </div>
+        <span class="reward-arrow">›</span>
+      </div>
+      <div class="reward-item">
+        <span class="reward-ico">🌿</span>
+        <div class="reward-info">
+          <div class="reward-xp">800 XP</div>
+          <div class="reward-name">Certificado Verde</div>
+          <div class="reward-desc">Receba um certificado digital de sustentabilidade.</div>
+        </div>
+        <span class="reward-arrow">›</span>
+      </div>
+      <div class="reward-item">
+        <span class="reward-ico">🏅</span>
+        <div class="reward-info">
+          <div class="reward-xp">1000 XP</div>
+          <div class="reward-name">Medalha Ouro</div>
+          <div class="reward-desc">Para os maiores economizadores!</div>
+        </div>
+        <span class="reward-arrow">›</span>
+      </div>
+    </div>
+    <div class="bottom-nav">
+      <button class="nav-item" onclick="go('s4')"><span class="nav-icon">🏠</span><span class="nav-label">Início</span></button>
+      <button class="nav-item" onclick="go('s5')"><span class="nav-icon">📊</span><span class="nav-label">Relatórios</span></button>
+      <button class="nav-item" onclick="go('s9')"><span class="nav-icon">🎯</span><span class="nav-label">Metas</span></button>
+      <button class="nav-item active" onclick="go('s10')"><span class="nav-icon">🎁</span><span class="nav-label">Recompensas</span></button>
+      <button class="nav-item" onclick="go('s11')"><span class="nav-icon">👤</span><span class="nav-label">Perfil</span></button>
+    </div>
+  </div>
+
+  <!-- ─── SCREEN 11: PERFIL ─── -->
+  <div class="screen" id="s11">
+    <div class="profile-header">
+      <button class="settings-btn">⚙️</button>
+      <div class="avatar-wrap">
+        <div class="avatar">👨</div>
+        <div>
+          <div class="profile-name">Alanys</div>
+          <div class="profile-level">Nível 5</div>
+          <div class="eco-badge">🌿 Eco Guardião</div>
+        </div>
+      </div>
+      <div class="profile-stats">
+        <div class="pstat">
+          <div class="pstat-value">R$320</div>
+          <div class="pstat-label">Economia total</div>
+        </div>
+        <div class="pstat">
+          <div class="pstat-value">26</div>
+          <div class="pstat-label">Desafios</div>
+        </div>
+        <div class="pstat">
+          <div class="pstat-value">8</div>
+          <div class="pstat-label">Metas</div>
+        </div>
+      </div>
+    </div>
+    <div class="profile-body scrollable">
+      <div class="profile-card">
+        <div class="profile-section-title">Minhas Conquistas</div>
+        <div class="conquests-row">
+          <div class="conquest-badge">🥉</div>
+          <div class="conquest-badge">🥈</div>
+          <div class="conquest-badge">🥇</div>
+          <div class="conquest-badge" onclick="go('s7')">⚡</div>
+          <div class="conquest-badge" style="cursor:pointer" onclick="go('s7')">🌟</div>
+        </div>
+      </div>
+      <button class="logout-btn" onclick="go('s1')">↩ Sair da conta</button>
+    </div>
+    <div class="bottom-nav">
+      <button class="nav-item" onclick="go('s4')"><span class="nav-icon">🏠</span><span class="nav-label">Início</span></button>
+      <button class="nav-item" onclick="go('s5')"><span class="nav-icon">📊</span><span class="nav-label">Relatórios</span></button>
+      <button class="nav-item" onclick="go('s9')"><span class="nav-icon">🎯</span><span class="nav-label">Metas</span></button>
+      <button class="nav-item" onclick="go('s10')"><span class="nav-icon">🎁</span><span class="nav-label">Recompensas</span></button>
+      <button class="nav-item active" onclick="go('s11')"><span class="nav-icon">👤</span><span class="nav-label">Perfil</span></button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function go(screenId) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(screenId).classList.add('active');
+}
+</script>
+</body>
+</html>
